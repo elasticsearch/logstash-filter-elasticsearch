@@ -42,7 +42,11 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
   # Basic Auth - password
   config :password, :validate => :password
 
-  # SSL
+  # Enable SSL/TLS secured communication to Elasticsearch cluster. Leaving this unspecified will use whatever scheme
+  # is specified in the URLs listed in 'hosts'. Mixed schemes are supported.
+  # If no explicit protocol is specified, plain HTTP will be used.
+  # If SSL is set to true, the plugin will refuse to start if any of
+  # the hosts specifies an 'http://' scheme.
   config :ssl, :validate => :boolean, :default => false
 
   # SSL Certificate Authority file
@@ -71,6 +75,7 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
       @query_dsl = file.read
     end
 
+    LogStash::Filters::ElasticsearchClient.validate_config!(@user, @password, client_options)
   end # def register
 
   def filter(event)
@@ -85,7 +90,7 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
         query = event.sprintf(@query)
         params[:q] = query
         params[:size] = result_size
-        params[:sort] =  @sort if @enable_sort
+        params[:sort] = @sort if @enable_sort
       end
 
       @logger.debug("Querying elasticsearch for lookup", :params => params)

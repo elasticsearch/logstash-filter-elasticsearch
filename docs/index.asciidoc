@@ -89,7 +89,6 @@ if [type] == "end" {
 template.json:
 
 [source,json]
-[source,json]
 --------------------------------------------------
 {
   "size": 1,
@@ -276,12 +275,17 @@ How many results to return
 Comma-delimited list of `<field>:<direction>` pairs that define the sort order
 
 [id="plugins-{type}s-{plugin}-ssl"]
-===== `ssl` 
+===== `ssl`
 
   * Value type is <<boolean,boolean>>
   * Default value is `false`
 
-SSL
+Enable SSL/TLS secured communication to Elasticsearch cluster.
+Leaving this unspecified will use whatever scheme is specified in the URLs listed in 'hosts'.
+Mixed schemes are supported.
+If no explicit protocol is specified, plain HTTP will be used.
+If SSL is set to true, the plugin will refuse to start if any of
+the hosts specifies an 'http://' scheme.
 
 [id="plugins-{type}s-{plugin}-tag_on_failure"]
 ===== `tag_on_failure` 

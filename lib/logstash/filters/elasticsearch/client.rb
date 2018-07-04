@@ -9,8 +9,12 @@ module LogStash
 
       attr_reader :client
 
+      URI_TEMPLATE = '%{scheme}://%{host}'.freeze
+
       def initialize(user, password, options={})
-        ssl     = options.fetch(:ssl, false)
+        ElasticsearchClient.validate_config!(user, password, options)
+
+        ssl     = options[:ssl]
         hosts   = options[:hosts]
         @logger = options[:logger]
 
@@ -20,7 +24,15 @@ module LogStash
           transport_options[:headers] = { Authorization: "Basic #{token}" }
         end
 
-        hosts.map! {|h| { host: h, scheme: 'https' } } if ssl
+        if options[:ssl]
+          hosts.map! do |h|
+            if h.start_with?('https://')
+              h
+            else
+              URI_TEMPLATE % { host: h, scheme: 'https' }
+            end
+          end
+        end
         # set ca_file even if ssl isn't on, since the host can be an https url
         transport_options[:ssl] = { ca_file: options[:ca_file] } if options[:ca_file]
 
@@ -30,6 +42,18 @@ module LogStash
 
       def search(params)
         @client.search(params)
+      end
+
+      def self.validate_config!(user, password, options={})
+        ssl     = options[:ssl]
+        hosts   = options[:hosts]
+        logger  = options[:logger]
+        if ssl == true && hosts.any? {|h| h.start_with?('http://') }
+          logger.error "SSL option was set to true but a host " +
+            "was also declared with a conflicting scheme, http://. " +
+            "Please reconcile this.", ssl: ssl, hosts: hosts
+          raise LogStash::ConfigurationError, "Aborting due to conflicting configuration"
+        end
       end
 
     end
