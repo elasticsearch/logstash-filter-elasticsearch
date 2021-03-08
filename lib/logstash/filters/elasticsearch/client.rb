@@ -30,7 +30,7 @@ module LogStash
         ssl_options ||= {}
 
         logger.info("New ElasticSearch filter client", :hosts => hosts)
-        @client = ::Elasticsearch::Client.new(hosts: hosts, transport_options: transport_options, transport_class: ::Elasticsearch::Transport::Transport::HTTP::Manticore, :ssl => ssl_options)
+        @client = ::Elasticsearch::Client.new(hosts: hosts, transport_options: transport_options, transport_class: ::Elasticsearch::Transport::Transport::HTTP::Manticore, :ssl => ssl_options, retry_on_failure: options[:retry_on_failure], retry_on_status: options[:retry_on_status])
       end
 
       def search(params)
